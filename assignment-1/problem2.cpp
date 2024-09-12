@@ -15,13 +15,19 @@
 int edgeCount(std::vector<int> const &A, size_t N) {
   int count = 0;
 
-  for (size_t i = 0; i < N; i += 1) {
-    for (size_t j = 0; j < N; j += 1) {
-      if (A[i * N + j] == 1) {
-        count++;
-      }
+#pragma omp parallel for reduction(+ : count)
+  for (size_t i = 0; i < N; ++i) {
+    for (size_t j = 0; j < N; ++j) {
+      count += (A[i * N + j] == 1);
     }
   }
+
+  //   #pragma omp parallel for reduction(+: count)
+  //   for (size_t k = 0; k < N * N; ++k) {
+  //     size_t i = k / N;
+  //     size_t j = k % N;
+  //     count += (A[i * N + j] == 1);
+  //   }
 
   return count;
 }

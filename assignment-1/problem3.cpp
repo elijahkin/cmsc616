@@ -14,12 +14,9 @@
 double productWithInverses(std::vector<double> const &x) {
   double result = 1.0;
 
-  for (int i = 0; i < x.size(); i++) {
-    if (i % 2 == 1) {
-      result *= 1 / x[i];
-    } else {
-      result *= x[i];
-    }
+#pragma omp parallel for reduction(* : result)
+  for (int i = 0; i < x.size(); ++i) {
+    result *= (i % 2) ? (1 / x[i]) : x[i];
   }
 
   return result;

@@ -30,12 +30,11 @@ double closestPair(std::vector<Point> const &points) {
 
   double min_dist = std::numeric_limits<double>::max();
 
-  for (int i = 0; i < points.size(); i++) {
-    for (int j = i + 1; j < points.size(); j++) {
+#pragma omp parallel for reduction(min : min_dist)
+  for (int i = 0; i < points.size(); ++i) {
+    for (int j = i + 1; j < points.size(); ++j) {
       double dist = getDistance(points[i], points[j]);
-      if (dist < min_dist) {
-        min_dist = dist;
-      }
+      min_dist = std::min(min_dist, dist);
     }
   }
 
@@ -57,7 +56,7 @@ int main(int argc, char **argv) {
   std::vector<Point> points(N);
   srand(seed);
 
-  for (size_t i = 0; i < points.size(); i++) {
+  for (size_t i = 0; i < points.size(); ++i) {
     points[i].x =
         (rand() / (double)RAND_MAX) * (POINTS_MAX - POINTS_MIN) + POINTS_MIN;
     points[i].y =
