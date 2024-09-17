@@ -19,7 +19,7 @@ declare -a nums_threads=(1 2 4 8 16 32 64)
 for n in "${nums_threads[@]}"
 do
   # Set the number of OpenMP threads to n
-  export OMP_NUM_THREADS=n
+  export OMP_NUM_THREADS=$n
 
   # Run the executables
   ./problem1 16384 &> problem1_$n.out
