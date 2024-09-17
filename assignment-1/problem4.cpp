@@ -39,7 +39,6 @@ void dft(std::vector<double> const &x,
 void dft_omp(std::vector<double> const &x,
              std::vector<std::complex<double>> &output) {
   int N = x.size();
-  double theta;
 
   // Allocate memory for the output array
   output.resize(N, std::complex<double>(0, 0));
@@ -48,7 +47,7 @@ void dft_omp(std::vector<double> const &x,
   for (int k = 0; k < N; ++k) {
     std::complex<double> sum(0.0, 0.0);
     for (int n = 0; n < N; ++n) {
-      theta = 2 * M_PI * k * n / N;
+      double theta = 2 * M_PI * k * n / N;
       std::complex<double> c(std::cos(theta), -std::sin(theta));
       sum += x[n] * c;
     }
