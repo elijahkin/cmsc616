@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   std::vector<Point> points(N);
   srand(seed);
 
-  for (size_t i = 0; i < points.size(); ++i) {
+  for (size_t i = 0; i < points.size(); i++) {
     points[i].x =
         (rand() / (double)RAND_MAX) * (POINTS_MAX - POINTS_MIN) + POINTS_MIN;
     points[i].y =

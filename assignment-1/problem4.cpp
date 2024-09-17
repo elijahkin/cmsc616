@@ -43,7 +43,7 @@ void dft_omp(std::vector<double> const &x,
   // Allocate memory for the output array
   output.resize(N, std::complex<double>(0, 0));
 
-#pragma omp parallel for reduction(+ : sum)
+#pragma omp parallel for
   for (int k = 0; k < N; ++k) {
     std::complex<double> sum(0.0, 0.0);
     for (int n = 0; n < N; ++n) {
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   std::vector<std::complex<double>> correct(N), test(N);
   srand(seed);
 
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < N; i += 1) {
     x[i] = (rand() / (double)RAND_MAX) * (POINTS_MAX - POINTS_MIN) + POINTS_MIN;
   }
 
@@ -82,11 +82,12 @@ int main(int argc, char **argv) {
   dft_omp(x, test);
 
   bool isCorrect = true;
-
-#pragma omp parallel for reduction(& : isCorrect)
-  for (int j = 0; j < x.size(); ++j) {
-    isCorrect &= (std::abs(correct[j].real() - test[j].real()) <= 1e-4) &&
-                 (std::abs(correct[j].imag() - test[j].imag()) <= 1e-4);
+  for (int j = 0; j < x.size(); j += 1) {
+    if (std::abs(correct[j].real() - test[j].real()) > 1e-4 ||
+        std::abs(correct[j].imag() - test[j].imag()) > 1e-4) {
+      isCorrect = false;
+      break;
+    }
   }
 
   printf("Correct? %s\n", isCorrect ? "true" : "false");
