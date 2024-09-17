@@ -20,3 +20,9 @@ export OMP_NUM_THREADS=8
 
 # Run the executable
 ./problem1 &> problem1.out
+./problem2 &> problem2.out
+./problem3 &> problem3.out
+./problem4 &> problem4.out
+./problem1_serial &> problem1_serial.out
+./problem2_serial &> problem2_serial.out
+./problem3_serial &> problem3_serial.out

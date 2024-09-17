@@ -50,12 +50,12 @@ int main(int argc, char **argv) {
     }
   }
 
-  // double totalTime = 0.0;
-  // double start = omp_get_wtime();
+  double totalTime = 0.0;
+  double start = omp_get_wtime();
 
   int count = edgeCount(A, N);
   printf("Count : %d\n", count);
 
-  // totalTime = omp_get_wtime() - start;
-  // printf("Time: %.5f\n", totalTime);
+  totalTime = omp_get_wtime() - start;
+  printf("Time: %.5f\n", totalTime);
 }

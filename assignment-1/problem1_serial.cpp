@@ -64,12 +64,12 @@ int main(int argc, char **argv) {
         (rand() / (double)RAND_MAX) * (POINTS_MAX - POINTS_MIN) + POINTS_MIN;
   }
 
-  // double totalTime = 0.0;
-  // double start = omp_get_wtime();
+  double totalTime = 0.0;
+  double start = omp_get_wtime();
 
   double dist = closestPair(points);
   printf("Distance: %.5f\n", dist);
 
-  // totalTime = omp_get_wtime() - start;
-  // printf("Time: %.5f\n", totalTime);
+  totalTime = omp_get_wtime() - start;
+  printf("Time: %.5f\n", totalTime);
 }
