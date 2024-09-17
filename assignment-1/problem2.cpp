@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <omp.h>
 #include <stdlib.h>
 #include <vector>
 

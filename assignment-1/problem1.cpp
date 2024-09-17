@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <iostream>
 #include <limits>
+#include <omp.h>
 #include <stdlib.h>
 #include <vector>
 

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <complex>
+#include <omp.h>
 #include <stdlib.h>
 #include <vector>
 
