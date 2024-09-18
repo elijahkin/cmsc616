@@ -75,8 +75,8 @@ int main(int argc, char **argv) {
     x[i] = (rand() / (double)RAND_MAX) * (POINTS_MAX - POINTS_MIN) + POINTS_MIN;
   }
 
-  double totalTime = 0.0;
-  double start = omp_get_wtime();
+  // double totalTime = 0.0;
+  // double start = omp_get_wtime();
 
   dft(x, correct);
   dft_omp(x, test);
@@ -92,6 +92,6 @@ int main(int argc, char **argv) {
 
   printf("Correct? %s\n", isCorrect ? "true" : "false");
 
-  totalTime = omp_get_wtime() - start;
-  printf("Time: %.5f\n", totalTime);
+  // totalTime = omp_get_wtime() - start;
+  // printf("Time: %.5f\n", totalTime);
 }

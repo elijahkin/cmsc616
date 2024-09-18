@@ -45,12 +45,12 @@ int main(int argc, char **argv) {
     x[i] = (rand() / (double)RAND_MAX) * (points_max - points_min) + points_min;
   }
 
-  double totalTime = 0.0;
-  double start = omp_get_wtime();
+  // double totalTime = 0.0;
+  // double start = omp_get_wtime();
 
   double val = productWithInverses(x);
   printf("Product: %.5f\n", val);
 
-  totalTime = omp_get_wtime() - start;
-  printf("Time: %.5f\n", totalTime);
+  // totalTime = omp_get_wtime() - start;
+  // printf("Time: %.5f\n", totalTime);
 }
