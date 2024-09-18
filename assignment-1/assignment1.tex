@@ -1,0 +1,100 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry}
+
+\title{Assignment 1: OpenMP}
+\author{Elijah Kin}
+\date{September 18, 2024}
+
+\begin{document}
+  \maketitle
+
+  \subsection*{Problem 1}
+  For this problem, we replaced the code snippet
+  \begin{center}
+    \texttt{if (dist < min\_dist) \{ min\_dist = dist; \} }
+  \end{center}
+  with the equivalent
+  \begin{center}
+    \texttt{min\_dist = std::min(min\_dist, dist);}
+  \end{center}
+  such that \texttt{min\_dist} can be made a reduction variable by adding the OpenMP directive
+  \begin{center}
+    \texttt{\#pragma omp parallel for reduction(min : min\_dist)}
+  \end{center}
+  above the outer \texttt{for} loop. As far as performance, timing the code for problem size 16384 for different numbers of threads, we measure
+  \begin{center}
+    \begin{tabular}{ |c|c|c|c|c|c|c|c| }
+     \hline
+     Threads & 1 & 2 & 4 & 8 & 16 & 32 & 64 \\
+     \hline
+     Time (s) & 0.37301 & 0.27924 & 0.16289 & 0.08785 & 0.04679 & 0.02501 & 0.01717 \\
+     \hline
+    \end{tabular}
+  \end{center}
+
+  \subsection*{Problem 2}
+  We first replace the code snippet
+  \begin{center}
+    \texttt{if (A[i * N + j] == 1) \{count++\}}
+  \end{center}
+  with the below via a ternary expression
+  \begin{center}
+    \texttt{count += (A[i * N + j] == 1);}
+  \end{center}
+  such that \texttt{count} can be made a reduction variable by adding the OpenMP directive
+  \begin{center}
+    \texttt{\#pragma omp parallel for reduction(+ : count)}
+  \end{center}
+  above the outer \texttt{for} loop. Additionally, we flatten the two \texttt{for} loops into one. Timing the code with problem size 8192 across different numbers of threads, we measure
+  \begin{center}
+    \begin{tabular}{ |c|c|c|c|c|c|c|c| }
+     \hline
+     Threads & 1 & 2 & 4 & 8 & 16 & 32 & 64 \\
+     \hline
+     Time (s) & 0.04228 & 0.02145 & 0.01675 & 0.01825 & 0.02220 & 0.02176 & 0.01850 \\
+     \hline
+    \end{tabular}
+  \end{center}
+
+  \subsection*{Problem 3}
+  We first rewrote the code snippet
+  \begin{center}
+    \texttt{if (i \% 2 == 1) \{result *= 1 / x[i];\} else \{result *= x[i];\}}
+  \end{center}
+  with the below to instead use a ternary expression
+  \begin{center}
+    \texttt{result *= (i \% 2) ? (1 / x[i]) : x[i];}
+  \end{center}
+  Further, then noting that \texttt{result} can be made a reduction variable, we added the OpenMP directive
+  \begin{center}
+    \texttt{\#pragma omp parallel for reduction(* : result)}
+  \end{center}
+  Timing the code with problem size 67108864 across different numbers of threads, we measure
+  \begin{center}
+    \begin{tabular}{ |c|c|c|c|c|c|c|c| }
+     \hline
+     Threads & 1 & 2 & 4 & 8 & 16 & 32 & 64 \\
+     \hline
+     Time (s) & 0.06922 & 0.03595 & 0.03083 & 0.03074 & 0.03305 & 0.02768 & 0.02909 \\
+     \hline
+    \end{tabular}
+  \end{center}
+
+  \subsection*{Problem 4}
+  As specified, we first created a copy \texttt{dft\_omp} of \texttt{dft} and changed line 61 to call \texttt{dft\_omp}. Within \texttt{dft\_omp}, we moved the declaration of \texttt{theta} to the inner \texttt{for} loop (since it is not used outside this loop), and added the OpenMP directive
+  \begin{center}
+    \texttt{\#pragma omp parallel for}
+  \end{center}
+  to the outer for loop. Timing the code for problem size 8192 with different numbers of threads, we find
+  \begin{center}
+    \begin{tabular}{ |c|c|c|c|c|c|c|c| }
+     \hline
+     Threads & 1 & 2 & 4 & 8 & 16 & 32 & 64 \\
+     \hline
+     Time (s) & 2.58517 & 1.93782 & 1.61645 & 1.45481 & 1.43629 & 1.33427 & 1.31693 \\
+     \hline
+    \end{tabular}
+  \end{center}
+  It is expected that the 64 thread version is roughly twice as fast as the single thread version; regardless of the number of threads, the serial function \texttt{dft} is being included in the timing.
+\end{document}
