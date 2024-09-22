@@ -14,4 +14,5 @@ export OMPI_MCA_mpi_cuda_support=0
 module load openmpi/gcc
 
 # Run the MPI executable
-mpirun -np 16 ./cpi-mpi &> my-mpi.out
+mpirun -np 1 ./cpi-mpi &> myfile-1.out
+mpirun -np 16 ./cpi-mpi &> myfile-16.out
