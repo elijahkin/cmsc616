@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Use previous_life to track the pervious state of the board.
+  // Use previous_life to track the previous state of the board.
   // Pad the previous_life matrix with 0s on all four sides by setting all
   // cells in the following rows and columns to 0:
   //  1. Row 0
@@ -148,9 +148,6 @@ int main(int argc, char *argv[]) {
   // For serial code: min, avg, max are the same
   cout << "TIME: Min: " << local_time << " s Avg: " << local_time
        << " s Max: " << local_time << " s\n";
-  // For C code, use:
-  // printf("TIME: Min: %f s Avg: %f s Max: %f s\n", local_time, local_time,
-  // local_time);
 
   // Write out the final state to the output file.
   write_output(life, X_limit, Y_limit, input_file_name, num_of_generations);

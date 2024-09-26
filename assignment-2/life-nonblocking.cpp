@@ -1,3 +1,4 @@
+#include "mpi.h"
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -8,13 +9,17 @@ using namespace std;
 /*
  * Reads the input file line by line and stores it in a 2D matrix.
  */
-void read_input_file(int **life, string const &input_file_name) {
+void read_input_file(int **life, string const &input_file_name,
+                     int rows_per_proc) {
 
   // Open the input file for reading.
   ifstream input_file;
   input_file.open(input_file_name);
   if (!input_file.is_open())
     perror("Input file cannot be opened");
+
+  int myrank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
   string line, val;
   int x, y;
@@ -30,7 +35,11 @@ void read_input_file(int **life, string const &input_file_name) {
     y = stoi(val);
 
     // Populate the life matrix.
-    life[x][y] = 1;
+    if (x >= (myrank + 1) * rows_per_proc) {
+      break;
+    } else if (x >= myrank * rows_per_proc) {
+      life[x][y] = 1;
+    }
   }
   input_file.close();
 }
@@ -66,12 +75,26 @@ void write_output(int **result_matrix, int X_limit, int Y_limit,
 void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int neighbors = 0;
 
+  int myrank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+
+  MPI_Isend(&life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD, TODO);
+  MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, myrank + 1, 0, MPI_COMM_WORLD,
+            TODO);
+  MPI_Irecv(&previous_life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD,
+            TODO);
+  MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, myrank + 1, 0,
+            MPI_COMM_WORLD, TODO);
+
   // Update the previous_life matrix with the current life matrix state.
   for (int i = 0; i < X_limit; i++) {
     for (int j = 0; j < Y_limit; j++) {
       previous_life[i + 1][j + 1] = life[i][j];
     }
   }
+
+  MPI_Wait(TODO, TODO);
+  MPI_Wait(TODO, TODO);
 
   // For simulating each generation, calculate the number of live
   // neighbors for each cell and then determine the state of the cell in
@@ -108,35 +131,45 @@ int main(int argc, char *argv[]) {
     perror("Expected arguments: ./life <input_file> <num_of_generations> "
            "<X_limit> <Y_limit>");
 
+  float min_time, sum_time, max_time;
+
+  int myrank, numpes;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  MPI_Comm_size(MPI_COMM_WORLD, &numpes);
+
   string input_file_name = argv[1];
   int num_of_generations = stoi(argv[2]);
   int X_limit = stoi(argv[3]);
   int Y_limit = stoi(argv[4]);
 
-  int **life = new int *[X_limit];
-  for (int i = 0; i < X_limit; i++) {
+  // TODO probably redefine X_limit as this
+  int rows_per_proc = X_limit / numpes;
+
+  int **life = new int *[rows_per_proc];
+  for (int i = 0; i < rows_per_proc; i++) {
     life[i] = new int[Y_limit];
     for (int j = 0; j < Y_limit; j++) {
       life[i][j] = 0;
     }
   }
 
-  // Use previous_life to track the pervious state of the board.
+  // Use previous_life to track the previous state of the board.
   // Pad the previous_life matrix with 0s on all four sides by setting all
   // cells in the following rows and columns to 0:
   //  1. Row 0
   //  2. Column 0
   //  3. Row X_limit+1
   //  4. Column Y_limit+1
-  int **previous_life = new int *[X_limit + 2];
-  for (int i = 0; i < X_limit + 2; i++) {
+  int **previous_life = new int *[rows_per_proc + 2];
+  for (int i = 0; i < rows_per_proc + 2; i++) {
     previous_life[i] = new int[Y_limit + 2];
     for (int j = 0; j < Y_limit + 2; j++) {
       previous_life[i][j] = 0;
     }
   }
 
-  read_input_file(life, input_file_name);
+  read_input_file(life, input_file_name, rows_per_proc);
 
   clock_t start = clock();
   for (int numg = 0; numg < num_of_generations; numg++) {
@@ -145,13 +178,17 @@ int main(int argc, char *argv[]) {
   clock_t end = clock();
   float local_time = float(end - start) / CLOCKS_PER_SEC;
 
-  // For serial code: min, avg, max are the same
-  cout << "TIME: Min: " << local_time << " s Avg: " << local_time
-       << " s Max: " << local_time << " s\n";
-  // For C code, use:
-  // printf("TIME: Min: %f s Avg: %f s Max: %f s\n", local_time, local_time,
-  // local_time);
+  MPI_Reduce(&local_time, &min_time, 1, MPI_FLOAT, MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&local_time, &sum_time, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&local_time, &max_time, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
 
+  if (myrank == 0) {
+    // For serial code: min, avg, max are the same
+    cout << "TIME: Min: " << min_time << " s Avg: " << sum_time / numpes
+         << " s Max: " << max_time << " s\n";
+  }
+
+  // TODO make sure output file is written in correct order
   // Write out the final state to the output file.
   write_output(life, X_limit, Y_limit, input_file_name, num_of_generations);
 
@@ -163,5 +200,7 @@ int main(int argc, char *argv[]) {
   }
   delete[] life;
   delete[] previous_life;
+
+  MPI_Finalize();
   return 0;
 }
