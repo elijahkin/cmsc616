@@ -139,8 +139,9 @@ int main(int argc, char *argv[]) {
   int X_limit = stoi(argv[3]);
   int Y_limit = stoi(argv[4]);
 
+  int **global_life = nullptr;
   if (myrank == 0) {
-    int **global_life = new int *[X_limit];
+    global_life = new int *[X_limit];
     for (int i = 0; i < X_limit; i++) {
       global_life[i] = new int[Y_limit];
       for (int j = 0; j < Y_limit; j++) {
