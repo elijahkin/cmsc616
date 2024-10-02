@@ -8,7 +8,7 @@ serial: serial.cpp
 	$(CXX) $(CXXFLAGS) -o life $<
 
 life-nonblocking: life-nonblocking.cpp
-	$(CXX) $(CXXFLAGS) -o life-nonblocking $<
+	$(MPICXX) $(CXXFLAGS) -o life-nonblocking $<
 
 clean:
 	rm -f life life-nonblocking
