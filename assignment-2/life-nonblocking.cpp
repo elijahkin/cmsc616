@@ -67,18 +67,21 @@ void write_output(int **result_matrix, int X_limit, int Y_limit,
 void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int neighbors = 0;
 
-  int myrank;
+  int myrank, numpes;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  MPI_Comm_size(MPI_COMM_WORLD, &numpes);
 
   MPI_Request req_prev, req_next;
 
-  MPI_Isend(&life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD,
-            &req_prev);
-  MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, myrank + 1, 0, MPI_COMM_WORLD,
+  int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
+  int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
+
+  MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &req_prev);
+  MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
             &req_next);
-  MPI_Irecv(&previous_life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD,
+  MPI_Irecv(&previous_life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
             &req_next);
-  MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, myrank + 1, 0,
+  MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, next, 0,
             MPI_COMM_WORLD, &req_prev);
 
   // Update the previous_life matrix with the current life matrix state.
