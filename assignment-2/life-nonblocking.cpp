@@ -73,13 +73,13 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   MPI_Request req_prev, req_next;
 
   MPI_Isend(&life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD,
-            req_prev);
+            &req_prev);
   MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, myrank + 1, 0, MPI_COMM_WORLD,
-            req_next);
+            &req_next);
   MPI_Irecv(&previous_life[0], Y_limit, MPI_INT, myrank - 1, 0, MPI_COMM_WORLD,
-            req_next);
+            &req_next);
   MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, myrank + 1, 0,
-            MPI_COMM_WORLD, req_prev);
+            MPI_COMM_WORLD, &req_prev);
 
   // Update the previous_life matrix with the current life matrix state.
   for (int i = 0; i < X_limit; i++) {
