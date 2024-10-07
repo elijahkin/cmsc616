@@ -71,6 +71,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int myrank, numpes;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &numpes);
+  cout << "Entering compute on process " << myrank << endl;
 
   MPI_Request req_prev, req_next;
 
@@ -84,6 +85,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
             &req_next);
   MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, next, 0,
             MPI_COMM_WORLD, &req_prev);
+  cout << "Made it past Isend and Irecv on process " << myrank << endl;
 
   // Update the previous_life matrix with the current life matrix state.
   for (int i = 0; i < X_limit; i++) {
@@ -95,6 +97,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   MPI_Status stat_prev, stat_next;
   MPI_Wait(&req_prev, &stat_prev);
   MPI_Wait(&req_next, &stat_next);
+  cout << "Made it past Wait on process " << myrank << endl;
 
   // For simulating each generation, calculate the number of live
   // neighbors for each cell and then determine the state of the cell in
@@ -120,6 +123,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
       }
     }
   }
+  cout << "Exiting compute on process " << myrank << endl;
 }
 
 /**
