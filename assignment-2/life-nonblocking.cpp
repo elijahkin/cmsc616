@@ -77,15 +77,16 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
   int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
 
-  cout << "Starting Isend and Irecv on process " << myrank << endl;
+  cout << "Starting Isendon process " << myrank << endl;
   MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &req_prev);
   MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
             &req_next);
+  cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
   MPI_Irecv(&previous_life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
             &req_next);
   MPI_Irecv(&previous_life[X_limit + 1], Y_limit, MPI_INT, next, 0,
             MPI_COMM_WORLD, &req_prev);
-  cout << "Passed Isend and Irecv on process " << myrank << endl;
+  cout << "Passed Irecv on process " << myrank << endl;
 
   // Update the previous_life matrix with the current life matrix state.
   for (int i = 0; i < X_limit; i++) {
@@ -123,6 +124,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
       }
     }
   }
+  cout << "Exiting compute loop on process " << myrank << endl;
 }
 
 /**
