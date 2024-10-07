@@ -68,36 +68,12 @@ void write_output(int **result_matrix, int X_limit, int Y_limit,
 void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int neighbors = 0;
 
-  int myrank, numpes;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  MPI_Comm_size(MPI_COMM_WORLD, &numpes);
-
-  MPI_Request requests[4];
-  MPI_Status statuses[4];
-
-  int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
-  int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
-
-  cout << "Starting Isend on process " << myrank << endl;
-  MPI_Isend(life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &requests[0]);
-  MPI_Isend(life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
-            &requests[1]);
-  cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
-  MPI_Irecv(&previous_life[0][1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
-            &requests[2]);
-  MPI_Irecv(&previous_life[X_limit + 1][1], Y_limit, MPI_INT, next, 0,
-            MPI_COMM_WORLD, &requests[3]);
-  cout << "Passed Irecv on process " << myrank << endl;
-
   // Update the previous_life matrix with the current life matrix state.
   for (int i = 0; i < X_limit; i++) {
     for (int j = 0; j < Y_limit; j++) {
       previous_life[i + 1][j + 1] = life[i][j];
     }
   }
-  cout << "Updated previous_life matrix on process " << myrank << endl;
-  MPI_Waitall(4, requests, statuses);
-  cout << "Made it past Wait on process " << myrank << endl;
 
   // For simulating each generation, calculate the number of live
   // neighbors for each cell and then determine the state of the cell in
@@ -123,7 +99,6 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
       }
     }
   }
-  cout << "Exiting compute loop on process " << myrank << endl;
 }
 
 /**
@@ -192,6 +167,27 @@ int main(int argc, char *argv[]) {
   clock_t start = clock();
   cout << "Entering compute on process " << myrank << endl;
   for (int numg = 0; numg < num_of_generations; numg++) {
+    MPI_Request requests[4];
+    MPI_Status statuses[4];
+
+    int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
+    int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
+
+    cout << "Starting Isend on process " << myrank << endl;
+    MPI_Isend(life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &requests[0]);
+    MPI_Isend(life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
+              &requests[1]);
+    cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
+    MPI_Irecv(&previous_life[0][1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
+              &requests[2]);
+    MPI_Irecv(&previous_life[X_limit + 1][1], Y_limit, MPI_INT, next, 0,
+              MPI_COMM_WORLD, &requests[3]);
+    cout << "Passed Irecv on process " << myrank << endl;
+
+    cout << "Updated previous_life matrix on process " << myrank << endl;
+    MPI_Waitall(4, requests, statuses);
+    cout << "Made it past Wait on process " << myrank << endl;
+
     compute(life, previous_life, X_limit_proc, Y_limit);
   }
   cout << "Finished compute on process " << myrank << endl;
