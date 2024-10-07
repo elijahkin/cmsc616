@@ -1,5 +1,4 @@
 #include "mpi.h"
-#include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -153,30 +152,22 @@ int main(int argc, char *argv[]) {
   }
 
   clock_t start = clock();
-  cout << "Entering compute on process " << myrank << endl;
   for (int numg = 0; numg < num_of_generations; numg++) {
     MPI_Request requests[4];
     MPI_Status statuses[4];
 
-    cout << "Starting Isend on process " << myrank << endl;
     MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
               &requests[0]);
     MPI_Isend(&life[(X_limit_proc - 1) * Y_limit], Y_limit, MPI_INT, next, 0,
               MPI_COMM_WORLD, &requests[1]);
-    cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
     MPI_Irecv(&previous_life[1 * (Y_limit + 2)], Y_limit, MPI_INT, prev, 0,
               MPI_COMM_WORLD, &requests[2]);
     MPI_Irecv(&previous_life[(X_limit_proc + 1) * (Y_limit + 2)], Y_limit,
               MPI_INT, next, 0, MPI_COMM_WORLD, &requests[3]);
-    cout << "Passed Irecv on process " << myrank << endl;
 
-    cout << "Updated previous_life matrix on process " << myrank << endl;
     MPI_Waitall(4, requests, statuses);
-    cout << "Made it past Wait on process " << myrank << endl;
-
     compute(life, previous_life, X_limit_proc, Y_limit);
   }
-  cout << "Finished compute on process " << myrank << endl;
   clock_t end = clock();
   float local_time = float(end - start) / CLOCKS_PER_SEC;
 
@@ -186,7 +177,6 @@ int main(int argc, char *argv[]) {
 
   MPI_Gather(life, X_limit_proc * Y_limit, MPI_INT, global_life,
              X_limit_proc * Y_limit, MPI_INT, 0, MPI_COMM_WORLD);
-  cout << "Finished gather on process " << myrank << endl;
 
   if (myrank == 0) {
     // For serial code: min, avg, max are the same
@@ -198,13 +188,11 @@ int main(int argc, char *argv[]) {
                  num_of_generations);
   }
 
-  cout << "Starting deletion on process " << myrank << endl;
   delete[] life;
   delete[] previous_life;
   if (myrank == 0) {
     delete[] global_life;
   }
-  cout << "Finished deletion on process " << myrank << endl;
 
   MPI_Finalize();
   return 0;
