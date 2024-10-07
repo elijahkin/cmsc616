@@ -1,4 +1,5 @@
 #include "mpi.h"
+#include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -136,6 +137,7 @@ int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &numpes);
+  cout << "Hello from process " << myrank << endl;
 
   string input_file_name = argv[1];
   int num_of_generations = stoi(argv[2]);
@@ -166,6 +168,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  cout << "Made it on process " << myrank << endl;
   MPI_Scatter(&global_life, X_limit_proc, MPI_INT, &life, X_limit_proc, MPI_INT,
               0, MPI_COMM_WORLD);
 
@@ -184,12 +187,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  cout << "Starting clock on process " << myrank << endl;
   clock_t start = clock();
   for (int numg = 0; numg < num_of_generations; numg++) {
     compute(life, previous_life, X_limit, Y_limit);
   }
   clock_t end = clock();
   float local_time = float(end - start) / CLOCKS_PER_SEC;
+  cout << "Stopping clock on process " << myrank << endl;
 
   MPI_Reduce(&local_time, &min_time, 1, MPI_FLOAT, MPI_MIN, 0, MPI_COMM_WORLD);
   MPI_Reduce(&local_time, &sum_time, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -197,6 +202,7 @@ int main(int argc, char *argv[]) {
 
   MPI_Gather(&life, X_limit_proc, MPI_INT, &global_life, X_limit_proc, MPI_INT,
              0, MPI_COMM_WORLD);
+  cout << "Finished gather on process " << myrank << endl;
 
   if (myrank == 0) {
     // For serial code: min, avg, max are the same
@@ -208,6 +214,7 @@ int main(int argc, char *argv[]) {
                  num_of_generations);
   }
 
+  cout << "Starting deletion on process " << myrank << endl;
   for (int i = 0; i < X_limit; i++) {
     delete life[i];
   }
@@ -217,6 +224,7 @@ int main(int argc, char *argv[]) {
   delete[] life;
   delete[] previous_life;
 
+  cout << "Finished deletion on process " << myrank << endl;
   MPI_Finalize();
   return 0;
 }
