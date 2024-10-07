@@ -77,7 +77,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
   int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
 
-  cout << "Starting Isendon process " << myrank << endl;
+  cout << "Starting Isend on process " << myrank << endl;
   MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &req_prev);
   MPI_Isend(&life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
             &req_next);
@@ -94,6 +94,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
       previous_life[i + 1][j + 1] = life[i][j];
     }
   }
+  cout << "Updated previous_life matrix on process " << myrank << endl;
 
   MPI_Status stat_prev, stat_next;
   MPI_Wait(&req_prev, &stat_prev);
@@ -193,7 +194,7 @@ int main(int argc, char *argv[]) {
   clock_t start = clock();
   cout << "Entering compute on process " << myrank << endl;
   for (int numg = 0; numg < num_of_generations; numg++) {
-    compute(life, previous_life, X_limit, Y_limit);
+    compute(life, previous_life, X_limit_proc, Y_limit);
   }
   cout << "Finished compute on process " << myrank << endl;
   clock_t end = clock();
