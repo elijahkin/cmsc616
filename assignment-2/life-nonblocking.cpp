@@ -136,6 +136,8 @@ int main(int argc, char *argv[]) {
   }
 
   int X_limit_proc = X_limit / numpes;
+  int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
+  int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
 
   int **life = new int *[X_limit_proc];
   for (int i = 0; i < X_limit_proc; i++) {
@@ -170,17 +172,15 @@ int main(int argc, char *argv[]) {
     MPI_Request requests[4];
     MPI_Status statuses[4];
 
-    int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
-    int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
-
     cout << "Starting Isend on process " << myrank << endl;
-    MPI_Isend(life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &requests[0]);
-    MPI_Isend(life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
-              &requests[1]);
+    MPI_Isend(&life[0][0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
+              &requests[0]);
+    MPI_Isend(&life[X_limit_proc - 1][0], Y_limit, MPI_INT, next, 0,
+              MPI_COMM_WORLD, &requests[1]);
     cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
     MPI_Irecv(&previous_life[0][1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
               &requests[2]);
-    MPI_Irecv(&previous_life[X_limit + 1][1], Y_limit, MPI_INT, next, 0,
+    MPI_Irecv(&previous_life[X_limit_proc + 1][1], Y_limit, MPI_INT, next, 0,
               MPI_COMM_WORLD, &requests[3]);
     cout << "Passed Irecv on process " << myrank << endl;
 
