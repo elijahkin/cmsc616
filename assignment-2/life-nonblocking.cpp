@@ -72,20 +72,21 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &numpes);
 
-  MPI_Request req_prev, req_next;
+  MPI_Request requests[4];
+  MPI_Status statuses[4];
 
   int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
   int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
 
   cout << "Starting Isend on process " << myrank << endl;
-  MPI_Isend(&life[0][0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &req_prev);
-  MPI_Isend(&life[X_limit - 1][0], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
-            &req_next);
+  MPI_Isend(life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD, &requests[0]);
+  MPI_Isend(life[X_limit - 1], Y_limit, MPI_INT, next, 0, MPI_COMM_WORLD,
+            &requests[1]);
   cout << "Passed Isend on process " << myrank << ". Starting Irecv" << endl;
   MPI_Irecv(&previous_life[0][1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
-            &req_next);
+            &requests[2]);
   MPI_Irecv(&previous_life[X_limit + 1][1], Y_limit, MPI_INT, next, 0,
-            MPI_COMM_WORLD, &req_prev);
+            MPI_COMM_WORLD, &requests[3]);
   cout << "Passed Irecv on process " << myrank << endl;
 
   // Update the previous_life matrix with the current life matrix state.
@@ -95,10 +96,7 @@ void compute(int **life, int **previous_life, int X_limit, int Y_limit) {
     }
   }
   cout << "Updated previous_life matrix on process " << myrank << endl;
-
-  MPI_Status stat_prev, stat_next;
-  MPI_Wait(&req_prev, &stat_prev);
-  MPI_Wait(&req_next, &stat_next);
+  MPI_Waitall(4, requests, statuses);
   cout << "Made it past Wait on process " << myrank << endl;
 
   // For simulating each generation, calculate the number of live
@@ -219,16 +217,22 @@ int main(int argc, char *argv[]) {
   }
 
   cout << "Starting deletion on process " << myrank << endl;
-  for (int i = 0; i < X_limit; i++) {
+  for (int i = 0; i < X_limit_proc; i++) {
     delete life[i];
   }
-  for (int i = 0; i < X_limit + 2; i++) {
+  for (int i = 0; i < X_limit_proc + 2; i++) {
     delete previous_life[i];
+  }
+  if (myrank == 0) {
+    for (int i = 0; i < X_limit; i++) {
+      delete global_life[i];
+    }
   }
   delete[] life;
   delete[] previous_life;
-
+  delete[] global_life;
   cout << "Finished deletion on process " << myrank << endl;
+
   MPI_Finalize();
   return 0;
 }
