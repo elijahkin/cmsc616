@@ -160,9 +160,9 @@ int main(int argc, char *argv[]) {
               &requests[0]);
     MPI_Isend(&life[(X_limit_proc - 1) * Y_limit], Y_limit, MPI_INT, next, 0,
               MPI_COMM_WORLD, &requests[1]);
-    MPI_Irecv(&previous_life[1 * (Y_limit + 2)], Y_limit, MPI_INT, prev, 0,
-              MPI_COMM_WORLD, &requests[2]);
-    MPI_Irecv(&previous_life[(X_limit_proc + 1) * (Y_limit + 2)], Y_limit,
+    MPI_Irecv(&previous_life[1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
+              &requests[2]);
+    MPI_Irecv(&previous_life[(X_limit_proc + 1) * (Y_limit + 2) + 1], Y_limit,
               MPI_INT, next, 0, MPI_COMM_WORLD, &requests[3]);
 
     MPI_Waitall(4, requests, statuses);
