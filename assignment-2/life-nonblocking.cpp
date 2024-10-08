@@ -62,49 +62,6 @@ void write_output(int *result_matrix, int X_limit, int Y_limit,
 }
 
 /*
- * Processes the life array for the specified number of iterations.
- */
-void compute(int *life, int *previous_life, int X_limit, int Y_limit) {
-  int neighbors = 0;
-
-  // Update the previous_life matrix with the current life matrix state.
-  for (int i = 0; i < X_limit; i++) {
-    for (int j = 0; j < Y_limit; j++) {
-      previous_life[(i + 1) * (Y_limit + 2) + (j + 1)] = life[i * Y_limit + j];
-    }
-  }
-
-  // For simulating each generation, calculate the number of live
-  // neighbors for each cell and then determine the state of the cell in
-  // the next iteration.
-  for (int i = 1; i < X_limit + 1; i++) {
-    for (int j = 1; j < Y_limit + 1; j++) {
-      neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
-                  previous_life[(i - 1) * (Y_limit + 2) + j] +
-                  previous_life[(i - 1) * (Y_limit + 2) + (j + 1)] +
-                  previous_life[i * (Y_limit + 2) + (j - 1)] +
-                  previous_life[i * (Y_limit + 2) + (j + 1)] +
-                  previous_life[(i + 1) * (Y_limit + 2) + (j - 1)] +
-                  previous_life[(i + 1) * (Y_limit + 2) + j] +
-                  previous_life[(i + 1) * (Y_limit + 2) + (j + 1)];
-
-      if (previous_life[i * (Y_limit + 2) + j] == 0) {
-        // A cell is born only when an unoccupied cell has 3 neighbors.
-        if (neighbors == 3)
-          life[(i - 1) * Y_limit + (j - 1)] = 1;
-      } else {
-        // An occupied cell survives only if it has either 2 or 3 neighbors.
-        // The cell dies out of loneliness if its neighbor count is 0 or 1.
-        // The cell also dies of overpopulation if its neighbor count is 4-8.
-        if (neighbors != 2 && neighbors != 3) {
-          life[(i - 1) * Y_limit + (j - 1)] = 0;
-        }
-      }
-    }
-  }
-}
-
-/*
  * The main function to execute "Game of Life" simulations on a 2D board.
  */
 int main(int argc, char *argv[]) {
@@ -165,8 +122,45 @@ int main(int argc, char *argv[]) {
     MPI_Irecv(&previous_life[(X_limit_proc + 1) * (Y_limit + 2) + 1], Y_limit,
               MPI_INT, next, 0, MPI_COMM_WORLD, &requests[3]);
 
+    // Update the previous_life matrix with the current life matrix state.
+    for (int i = 0; i < X_limit_proc; i++) {
+      for (int j = 0; j < Y_limit; j++) {
+        previous_life[(i + 1) * (Y_limit + 2) + (j + 1)] =
+            life[i * Y_limit + j];
+      }
+    }
+
     MPI_Waitall(4, requests, statuses);
-    compute(life, previous_life, X_limit_proc, Y_limit);
+
+    // For simulating each generation, calculate the number of live
+    // neighbors for each cell and then determine the state of the cell in
+    // the next iteration.
+    int neighbors;
+    for (int i = 1; i < X_limit_proc + 1; i++) {
+      for (int j = 1; j < Y_limit + 1; j++) {
+        neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
+                    previous_life[(i - 1) * (Y_limit + 2) + j] +
+                    previous_life[(i - 1) * (Y_limit + 2) + (j + 1)] +
+                    previous_life[i * (Y_limit + 2) + (j - 1)] +
+                    previous_life[i * (Y_limit + 2) + (j + 1)] +
+                    previous_life[(i + 1) * (Y_limit + 2) + (j - 1)] +
+                    previous_life[(i + 1) * (Y_limit + 2) + j] +
+                    previous_life[(i + 1) * (Y_limit + 2) + (j + 1)];
+
+        if (previous_life[i * (Y_limit + 2) + j] == 0) {
+          // A cell is born only when an unoccupied cell has 3 neighbors.
+          if (neighbors == 3)
+            life[(i - 1) * Y_limit + (j - 1)] = 1;
+        } else {
+          // An occupied cell survives only if it has either 2 or 3 neighbors.
+          // The cell dies out of loneliness if its neighbor count is 0 or 1.
+          // The cell also dies of overpopulation if its neighbor count is 4-8.
+          if (neighbors != 2 && neighbors != 3) {
+            life[(i - 1) * Y_limit + (j - 1)] = 0;
+          }
+        }
+      }
+    }
   }
   clock_t end = clock();
   float local_time = float(end - start) / CLOCKS_PER_SEC;
