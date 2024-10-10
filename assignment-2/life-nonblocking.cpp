@@ -135,17 +135,15 @@ int main(int argc, char *argv[]) {
     // the next iteration.
     int neighbors;
     for (int i = 2; i < X_limit_proc; ++i) {
-      const int prev_row = (i - 1) * (Y_limit + 2);
-      const int this_row = i * (Y_limit + 2);
-      const int next_row = (i + 1) * (Y_limit + 2);
       for (int j = 1; j < Y_limit + 1; ++j) {
-        neighbors =
-            previous_life[prev_row + (j - 1)] + previous_life[prev_row + j] +
-            previous_life[prev_row + (j + 1)] +
-            previous_life[this_row + (j - 1)] +
-            previous_life[this_row + (j + 1)] +
-            previous_life[next_row + (j - 1)] + previous_life[next_row + j] +
-            previous_life[next_row + (j + 1)];
+        neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
+                    previous_life[(i - 1) * (Y_limit + 2) + j] +
+                    previous_life[(i - 1) * (Y_limit + 2) + (j + 1)] +
+                    previous_life[i * (Y_limit + 2) + (j - 1)] +
+                    previous_life[i * (Y_limit + 2) + (j + 1)] +
+                    previous_life[(i + 1) * (Y_limit + 2) + (j - 1)] +
+                    previous_life[(i + 1) * (Y_limit + 2) + j] +
+                    previous_life[(i + 1) * (Y_limit + 2) + (j + 1)];
 
         // A cell is born only when an unoccupied cell has 3 neighbors.
         // An occupied cell survives only if it has either 2 or 3 neighbors.
