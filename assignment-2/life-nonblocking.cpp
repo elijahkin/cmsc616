@@ -88,9 +88,9 @@ int main(int argc, char *argv[]) {
     read_input_file(global_life, input_file_name, Y_limit);
   }
 
-  int X_limit_proc = X_limit / numpes;
-  int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
-  int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
+  const int X_limit_proc = X_limit / numpes;
+  const int prev = (myrank == 0) ? MPI_PROC_NULL : myrank - 1;
+  const int next = (myrank == numpes - 1) ? MPI_PROC_NULL : myrank + 1;
 
   int *life = new int[X_limit_proc * Y_limit];
   MPI_Scatter(global_life, X_limit_proc * Y_limit, MPI_INT, life,
@@ -108,15 +108,16 @@ int main(int argc, char *argv[]) {
     previous_life[i] = 0;
   }
 
+  MPI_Request requests[4];
+  MPI_Status statuses[4];
+
   clock_t start = clock();
   for (int numg = 0; numg < num_of_generations; ++numg) {
-    MPI_Request requests[4];
-    MPI_Status statuses[4];
-
     MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
               &requests[0]);
     MPI_Isend(&life[(X_limit_proc - 1) * Y_limit], Y_limit, MPI_INT, next, 0,
               MPI_COMM_WORLD, &requests[1]);
+
     MPI_Irecv(&previous_life[1], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
               &requests[2]);
     MPI_Irecv(&previous_life[(X_limit_proc + 1) * (Y_limit + 2) + 1], Y_limit,
