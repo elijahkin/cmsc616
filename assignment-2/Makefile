@@ -1,4 +1,4 @@
-all: serial life-nonblocking
+all: life-nonblocking
 
 CXX = g++
 MPICXX = mpicxx
