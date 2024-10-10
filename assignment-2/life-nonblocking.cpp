@@ -109,7 +109,6 @@ int main(int argc, char *argv[]) {
   }
 
   MPI_Request requests[4];
-  MPI_Status statuses[4];
 
   double start = MPI_Wtime();
   for (int numg = 0; numg < num_of_generations; ++numg) {
@@ -156,7 +155,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    MPI_Waitall(4, requests, statuses);
+    MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
 
     for (int i = 1; i < X_limit_proc + 1; i += X_limit_proc - 1) {
       for (int j = 1; j < Y_limit + 1; ++j) {
