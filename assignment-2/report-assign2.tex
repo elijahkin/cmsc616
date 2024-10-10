@@ -10,8 +10,10 @@
 \begin{document}
   \maketitle
 
-  % \subsection*{Data Distribution}
-  % TODO
+  \subsection*{Data Distribution}
+  We first have process 0 read in the entire input file to a \texttt{global\_life} 1D array. We then scatter this array across all processes, each receiving a chunk of the board into their own \texttt{life} array (also now 1D). Each process also has its own local \texttt{previous\_life} array.
+
+  Then in each generation, each process sends the top and bottom rows of its \texttt{life} array to the ghost rows in the \texttt{previous\_life} arrays of its neighboring processes. Finally after performing all iterations, we gather from all processes back into the \texttt{global\_life} array on process 0, before writing to an output file.
 
   \subsection*{Performance Results}
   Running the program on the 512x512 board for 500 iterations as a benchmark, we measure the following execution times on Zaratan.
