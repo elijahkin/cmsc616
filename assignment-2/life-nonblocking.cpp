@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     // neighbors for each cell and then determine the state of the cell in
     // the next iteration.
     int neighbors;
-    for (int i = 2; i < X_limit_proc; ++i) {
+    for (int i = 1; i < X_limit_proc + 1; ++i) {
       for (int j = 1; j < Y_limit + 1; ++j) {
         neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
                     previous_life[(i - 1) * (Y_limit + 2) + j] +
@@ -148,18 +148,13 @@ int main(int argc, char *argv[]) {
                     previous_life[(i + 1) * (Y_limit + 2) + j] +
                     previous_life[(i + 1) * (Y_limit + 2) + (j + 1)];
 
-        if (previous_life[i * (Y_limit + 2) + j] == 0) {
-          // A cell is born only when an unoccupied cell has 3 neighbors.
-          if (neighbors == 3)
-            life[(i - 1) * Y_limit + (j - 1)] = 1;
-        } else {
-          // An occupied cell survives only if it has either 2 or 3 neighbors.
-          // The cell dies out of loneliness if its neighbor count is 0 or 1.
-          // The cell also dies of overpopulation if its neighbor count is 4-8.
-          if (neighbors != 2 && neighbors != 3) {
-            life[(i - 1) * Y_limit + (j - 1)] = 0;
-          }
-        }
+        // A cell is born only when an unoccupied cell has 3 neighbors.
+        // An occupied cell survives only if it has either 2 or 3 neighbors.
+        // The cell dies out of loneliness if its neighbor count is 0 or 1.
+        // The cell also dies of overpopulation if its neighbor count is 4-8.
+        life[(i - 1) * Y_limit + (j - 1)] =
+            (neighbors == 3) ||
+            (previous_life[i * (Y_limit + 2) + j] && (neighbors == 2));
       }
     }
   }
