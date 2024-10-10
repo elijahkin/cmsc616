@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     perror("Expected arguments: ./life <input_file> <num_of_generations> "
            "<X_limit> <Y_limit>");
 
-  float min_time, sum_time, max_time;
+  double min_time, sum_time, max_time;
 
   int myrank, numpes;
   MPI_Init(&argc, &argv);
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
   MPI_Request requests[4];
   MPI_Status statuses[4];
 
-  clock_t start = clock();
+  double start = MPI_Wtime();
   for (int numg = 0; numg < num_of_generations; ++numg) {
     MPI_Isend(&life[0], Y_limit, MPI_INT, prev, 0, MPI_COMM_WORLD,
               &requests[0]);
@@ -179,12 +179,12 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  clock_t end = clock();
-  float local_time = float(end - start) / CLOCKS_PER_SEC;
+  double end = MPI_Wtime();
+  double local_time = end - start;
 
-  MPI_Reduce(&local_time, &min_time, 1, MPI_FLOAT, MPI_MIN, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&local_time, &sum_time, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&local_time, &max_time, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&local_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&local_time, &sum_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&local_time, &max_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
   MPI_Gather(life, X_limit_proc * Y_limit, MPI_INT, global_life,
              X_limit_proc * Y_limit, MPI_INT, 0, MPI_COMM_WORLD);
