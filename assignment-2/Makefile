@@ -2,7 +2,7 @@ all: serial life-nonblocking
 
 CXX = g++
 MPICXX = mpicxx
-CXXFLAGS = -std=c++11 -O3
+CXXFLAGS = -std=c++11 -O2
 
 serial: serial.cpp
 	$(CXX) $(CXXFLAGS) -o life $<
