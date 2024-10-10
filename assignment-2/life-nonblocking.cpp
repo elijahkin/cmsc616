@@ -51,8 +51,8 @@ void write_output(int *result_matrix, int X_limit, int Y_limit,
     perror("Output file cannot be opened");
 
   // Output each live cell on a new line.
-  for (int i = 0; i < X_limit; i++) {
-    for (int j = 0; j < Y_limit; j++) {
+  for (int i = 0; i < X_limit; ++i) {
+    for (int j = 0; j < Y_limit; ++j) {
       if (result_matrix[i * Y_limit + j] == 1) {
         output_file << i << "," << j << "\n";
       }
@@ -104,12 +104,12 @@ int main(int argc, char *argv[]) {
   //  3. Row X_limit+1
   //  4. Column Y_limit+1
   int *previous_life = new int[(X_limit_proc + 2) * (Y_limit + 2)];
-  for (int i = 0; i < (X_limit_proc + 2) * (Y_limit + 2); i++) {
+  for (int i = 0; i < (X_limit_proc + 2) * (Y_limit + 2); ++i) {
     previous_life[i] = 0;
   }
 
   clock_t start = clock();
-  for (int numg = 0; numg < num_of_generations; numg++) {
+  for (int numg = 0; numg < num_of_generations; ++numg) {
     MPI_Request requests[4];
     MPI_Status statuses[4];
 
@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
               MPI_INT, next, 0, MPI_COMM_WORLD, &requests[3]);
 
     // Update the previous_life matrix with the current life matrix state.
-    for (int i = 0; i < X_limit_proc; i++) {
-      for (int j = 0; j < Y_limit; j++) {
+    for (int i = 0; i < X_limit_proc; ++i) {
+      for (int j = 0; j < Y_limit; ++j) {
         previous_life[(i + 1) * (Y_limit + 2) + (j + 1)] =
             life[i * Y_limit + j];
       }
@@ -134,8 +134,8 @@ int main(int argc, char *argv[]) {
     // neighbors for each cell and then determine the state of the cell in
     // the next iteration.
     int neighbors;
-    for (int i = 2; i < X_limit_proc; i++) {
-      for (int j = 1; j < Y_limit + 1; j++) {
+    for (int i = 2; i < X_limit_proc; ++i) {
+      for (int j = 1; j < Y_limit + 1; ++j) {
         neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
                     previous_life[(i - 1) * (Y_limit + 2) + j] +
                     previous_life[(i - 1) * (Y_limit + 2) + (j + 1)] +
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
     MPI_Waitall(4, requests, statuses);
 
     for (int i = 1; i < X_limit_proc + 1; i += X_limit_proc - 1) {
-      for (int j = 1; j < Y_limit + 1; j++) {
+      for (int j = 1; j < Y_limit + 1; ++j) {
         neighbors = previous_life[(i - 1) * (Y_limit + 2) + (j - 1)] +
                     previous_life[(i - 1) * (Y_limit + 2) + j] +
                     previous_life[(i - 1) * (Y_limit + 2) + (j + 1)] +
