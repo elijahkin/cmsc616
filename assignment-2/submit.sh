@@ -16,6 +16,7 @@ module load openmpi/gcc
 
 declare -a nums_procs=(4 8 16 32 64 128)
 
+> life_nonblocking.out
 for n in "${nums_procs[@]}"
 do
   mpirun -np $n ./life-nonblocking data/life.512x512.data 500 512 512 &>> life_nonblocking.out
